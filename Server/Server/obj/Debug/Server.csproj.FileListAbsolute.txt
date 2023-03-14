@@ -1,0 +1,7 @@
+D:\C# Networking class work\Midterm\NetworkingPracticalMidterm\Server\Server\bin\Debug\Server.exe.config
+D:\C# Networking class work\Midterm\NetworkingPracticalMidterm\Server\Server\bin\Debug\Server.exe
+D:\C# Networking class work\Midterm\NetworkingPracticalMidterm\Server\Server\bin\Debug\Server.pdb
+D:\C# Networking class work\Midterm\NetworkingPracticalMidterm\Server\Server\obj\Debug\Server.csproj.AssemblyReference.cache
+D:\C# Networking class work\Midterm\NetworkingPracticalMidterm\Server\Server\obj\Debug\Server.csproj.CoreCompileInputs.cache
+D:\C# Networking class work\Midterm\NetworkingPracticalMidterm\Server\Server\obj\Debug\Server.exe
+D:\C# Networking class work\Midterm\NetworkingPracticalMidterm\Server\Server\obj\Debug\Server.pdb
