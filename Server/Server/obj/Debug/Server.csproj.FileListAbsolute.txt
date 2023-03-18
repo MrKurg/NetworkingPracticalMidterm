@@ -1,0 +1,8 @@
+C:\Users\ewwes\Ontario Tech\Year 3\Distributed System & Networking\NetworkingPracticalMidterm\Server\Server\bin\Debug\Server.exe.config
+C:\Users\ewwes\Ontario Tech\Year 3\Distributed System & Networking\NetworkingPracticalMidterm\Server\Server\bin\Debug\Server.exe
+C:\Users\ewwes\Ontario Tech\Year 3\Distributed System & Networking\NetworkingPracticalMidterm\Server\Server\bin\Debug\Server.pdb
+C:\Users\ewwes\Ontario Tech\Year 3\Distributed System & Networking\NetworkingPracticalMidterm\Server\Server\obj\Debug\Server.csproj.AssemblyReference.cache
+C:\Users\ewwes\Ontario Tech\Year 3\Distributed System & Networking\NetworkingPracticalMidterm\Server\Server\obj\Debug\Server.csproj.SuggestedBindingRedirects.cache
+C:\Users\ewwes\Ontario Tech\Year 3\Distributed System & Networking\NetworkingPracticalMidterm\Server\Server\obj\Debug\Server.csproj.CoreCompileInputs.cache
+C:\Users\ewwes\Ontario Tech\Year 3\Distributed System & Networking\NetworkingPracticalMidterm\Server\Server\obj\Debug\Server.exe
+C:\Users\ewwes\Ontario Tech\Year 3\Distributed System & Networking\NetworkingPracticalMidterm\Server\Server\obj\Debug\Server.pdb
