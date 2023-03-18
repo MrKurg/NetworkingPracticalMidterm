@@ -1,293 +1,131 @@
-﻿//// TCP Server (blocking mode)
-//using System;
-//using System.Text;
-//using System.Net;
-//using System.Net.Sockets;
-//using System.Linq.Expressions;
-//using System.Collections.Generic;
-//using System.Threading.Tasks;
-
-//public class TCPServer
-//{
-//    private static Dictionary<string, Socket> socketDict = new Dictionary<string, Socket>();
-
-//    private static bool isPrinting = false;
-//    private static string printContent = "";
-
-//    private static void taskPrint(string POKE)
-//    {
-//        printContent = POKE;
-//        isPrinting = true;
-//    }
-
-//    public static void StartServer()
-//    {
-//        Console.WriteLine("");
-//        IPAddress ip = IPAddress.Parse("127.0.0.1");
-
-//        Console.WriteLine("");
-//        IPEndPoint serverKE = new IPEndPoint(ip, 8889);
-
-//        Socket server = new Socket(ip.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
-
-//        try
-//        {
-//            server.Bind(serverKE);
-
-//            //function call sets the maximum length of the pending connections queue for the server socket to 10
-//            server.Listen(10);
-
-//            Console.WriteLine("[SYSTEM] Server has started");
-
-//            Task.Run(() => { ServerAccept(server); });
-
-//            while (true)
-//            {
-//                if (isPrinting)
-//                {
-//                    Console.WriteLine(printContent);
-//                    isPrinting = false;
-//                }
-//            }
-//        }
-//        catch (Exception JMK)
-//        {
-//            Console.WriteLine(JMK.ToString());
-//        }
-//    }
-
-//    static void ServerReceive(Socket newSocket, string clientNameMidterm)
-//    {
-//        while (newSocket.Connected)
-//        {
-//            byte[] buffer = new byte[1024];
-//            //int get = newSocket.Receive(data, 0, data.Length, SocketFlags.None);
-//            int get = newSocket.Receive(buffer);
-
-//            if (!newSocket.Poll(0, SelectMode.SelectWrite))
-//            {
-//                taskPrint("[SYSTEM] " + clientNameMidterm + ": " + "has left the server");
-//                socketDict.Remove(newSocket.RemoteEndPoint.ToString());
-
-//                newSocket.Shutdown(SocketShutdown.Both);
-//                newSocket.Close();
-//                return;
-//            }
-
-//            string msgReceived = Encoding.ASCII.GetString(buffer, 0, get);
-
-//            byte[] msg = Encoding.ASCII.GetBytes(("[" + clientNameMidterm + "]: " + msgReceived));
-
-//            foreach (string socketTag in socketDict.Keys)
-//            {
-//                socketDict[socketTag].Send(msg);
-//            }
-//        }
-//    }
-
-//    static void ServerAccept(Socket socket)
-//    {
-//        while (true)
-//        {
-//            Socket newSocket = socket.Accept();
-//            byte[] buffer = new byte[1024];
-//            int get = newSocket.Receive(buffer);
-//            string clientName = Encoding.ASCII.GetString(buffer, 0, get);
-//            socketDict.Add(newSocket.RemoteEndPoint.ToString(), newSocket);
-
-//            taskPrint("[SYSTEM] New client connected: " + clientName + " [" + newSocket.RemoteEndPoint.ToString() + "]");
-
-//            Task.Run(() => { ServerReceive(newSocket, clientName); });
-//        }
-//    }
-
-//    public static int Main(String[] args)
-//    {
-//        StartServer();
-//        return 0;
-//    }
-
-//}
+﻿// TCP Server (Blocking Mode)
 
 using System;
 using System.Text;
 using System.Net;
 using System.Net.Sockets;
 using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
+using System.Numerics;
 
 public class TCPServer
 {
-    private static Dictionary<string, Socket> socketDict = new Dictionary<string, Socket>();
+    private static byte[] buffer = new byte[512];
+    private static byte[] sendBuffer = new byte[512];
 
-    private static bool isPrinting = false;
-    private static string printContent = "";
+    private static Socket serverTCP, serverUDP;
+    private static Socket clientTCP, clientUDP;
 
-    private static void taskPrint(string POKE)
+    private static string sendMsg = "";
+    private static float[] aPos;
+
+
+    //Vector3 cubePos = new Vector3();
+
+    public static void StartServer()
     {
-        printContent = POKE;
-        isPrinting = true;
-    }
 
-    static void TcpServerReceive(Socket socket, string clientName)
-    {
-        while (socket.Connected)
-        {
-            byte[] buffer = new byte[1024];
-            int get = socket.Receive(buffer);
+        //Setup our server
+        Console.WriteLine("Starting Server...");
 
-            if (!socket.Poll(0, SelectMode.SelectWrite))
-            {
-                taskPrint($"[TCP] {clientName}: has left the server");
-                socketDict.Remove(socket.RemoteEndPoint.ToString());
+        //serverTCP = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+        serverUDP = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
 
-                socket.Shutdown(SocketShutdown.Both);
-                socket.Close();
-                return;
-            }
+        EndPoint remoteClient = new IPEndPoint(IPAddress.Any, 0);
 
-            string msgReceived = Encoding.ASCII.GetString(buffer, 0, get);
+        //serverTCP.Listen(10);
 
-            byte[] msg = Encoding.ASCII.GetBytes($"[TCP] [{clientName}]: {msgReceived}");
-
-            foreach (string socketTag in socketDict.Keys)
-            {
-                if (socketDict[socketTag].ProtocolType == ProtocolType.Tcp)
-                {
-                    socketDict[socketTag].Send(msg);
-                }
-            }
-        }
-    }
-
-    static void TcpServerAccept(Socket socket)
-    {
-        while (true)
-        {
-            Socket newSocket = socket.Accept();
-            byte[] buffer = new byte[1024];
-            int get = newSocket.Receive(buffer);
-            string clientName = Encoding.ASCII.GetString(buffer, 0, get);
-            socketDict.Add(newSocket.RemoteEndPoint.ToString(), newSocket);
-
-            taskPrint($"[TCP] New client connected: {clientName} [{newSocket.RemoteEndPoint.ToString()}]");
-
-            Task.Run(() => { TcpServerReceive(newSocket, clientName); });
-        }
-    }
-
-    public static void StartTCPServer()
-    {
-        Console.WriteLine("");
-        IPAddress ip = IPAddress.Parse("127.0.0.1");
-
-        Console.WriteLine("");
-        IPEndPoint serverKE = new IPEndPoint(ip, 8889);
-
-        Socket server = new Socket(ip.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
 
         try
         {
-            server.Bind(serverKE);
+            //serverTCP.Bind(new IPEndPoint(IPAddress.Parse("127.0.0.1"), 8888));
+            serverUDP.Bind(new IPEndPoint(IPAddress.Parse("127.0.0.1"), 8889));
 
-            server.Listen(10);
+            // Accept connections
+            Console.WriteLine("Waiting for connections...");
+            //clientTCP = serverTCP.Accept();
+            //clientUDP = serverUDP.Accept();
 
-            Console.WriteLine("[SYSTEM] TCP Server has started");
+            Console.WriteLine("Client connected!");
 
-            Task.Run(() => { TcpServerAccept(server); });
+            //IPEndPoint clientTcpEP = (IPEndPoint)clientTCP.RemoteEndPoint;
+            //IPEndPoint clientUdpEP = (IPEndPoint)clientUDP.RemoteEndPoint;
 
+            //Console.WriteLine("Client: {0}  Port: {1}", clientTcpEP.Address, clientTcpEP.Port);
+            //Console.WriteLine("Client: {0}  Port: {1}", clientUdpEP.Address, clientUdpEP.Port);
+
+            //byte[] msg = Encoding.ASCII.GetBytes("This is my first TCP server!!! Welcome to INFR3830");
+
+            // Sending data to connected client
+            //clientTCP.Send(msg);
+
+            // Loop
             while (true)
             {
-                if (isPrinting)
-                {
-                    Console.WriteLine(printContent);
-                    isPrinting = false;
-                }
+                int recv = serverUDP.ReceiveFrom(buffer, ref remoteClient);
+                aPos = new float[recv / 4];
+
+                Buffer.BlockCopy(buffer, 0, aPos, 0, recv);
+                Console.WriteLine("Received from " + remoteClient + " X:" + aPos[0] + " Y:" + aPos[1] + " Z:" + aPos[2]);
+
+                serverUDP.SendTo(buffer, remoteClient);
+
+                // User types a msg. Get input as a string
+                Console.Write("\nEnter message: ");
+                string userInput = Console.ReadLine();
+
+                // Convert to bytes
+                byte[] message = Encoding.ASCII.GetBytes(userInput);
+
+                // Send to client
+                clientTCP.Send(message);
+
+                // Print msg from client
+                byte[] clientMsgBuffer = new byte[512];
+                int receiveClientMessage = clientTCP.Receive(clientMsgBuffer);
+                int receiveClientMessageUdo = clientUDP.Receive(clientMsgBuffer);
+                Console.WriteLine("Client message: {0}", Encoding.ASCII.GetString(clientMsgBuffer, 0, receiveClientMessage));
+
+                // End loop
+                break;
             }
+
+            clientTCP.Shutdown(SocketShutdown.Both);
+            clientUDP.Shutdown(SocketShutdown.Both);
+            clientTCP.Close();
+            clientUDP.Close();
         }
-        catch (Exception ex)
+        catch (Exception e)
         {
-            Console.WriteLine(ex.ToString());
+            Console.WriteLine(e.ToString());
         }
     }
 
-    static void UdpServerReceive(Socket socket)
-    {
-        EndPoint remoteEndPoint = new IPEndPoint(IPAddress.Any, 0);
-
-        while (true)
-        {
-            byte[] buffer = new byte[1024];
-
-            int get = socket.ReceiveFrom(buffer, ref remoteEndPoint);
-
-            string msgReceived = Encoding.ASCII.GetString(buffer, 0, get);
-
-            byte[] msg = Encoding.ASCII.GetBytes($"[UDP] {remoteEndPoint}: {msgReceived}");
-
-            foreach (string socketTag in socketDict.Keys)
-            {
-                if (socketDict[socketTag].ProtocolType == ProtocolType.Udp)
-                {
-                    socketDict[socketTag].SendTo(msg, socketDict[socketTag].RemoteEndPoint);
-                }
-            }
-        }
-    }
-
-    public static void StartUDPServer()
-    {
-        Console.WriteLine("");
-        IPAddress ip = IPAddress.Parse("127.0.0.1");
-
-        Console.WriteLine("");
-        IPEndPoint serverKE = new IPEndPoint(ip, 8888);
-
-        Socket server = new Socket(ip.AddressFamily, SocketType.Dgram, ProtocolType.Udp);
-
-        try
-        {
-            server.Bind(serverKE);
-
-            Console.WriteLine("[SYSTEM] UDP Server has started");
-
-            Task.Run(() => { UdpServerReceive(server); });
-
-            while (true)
-            {
-                if (isPrinting)
-                {
-                    Console.WriteLine(printContent);
-                    isPrinting = false;
-                }
-            }
-        }
-        catch (Exception JMK)
-        {
-            Console.WriteLine(JMK.ToString());
-        }
-    }
-
-    static void UdpServerReceive(IAsyncResult result)
+    static void ServerReceive(IAsyncResult result)
     {
         Socket socket = (Socket)result.AsyncState;
-        while (true)
-        {
-            EndPoint remoteEndPoint = new IPEndPoint(IPAddress.Any, 0);
-            byte[] buffer = new byte[1024];
 
-            int get = socket.ReceiveFrom(buffer, ref remoteEndPoint);
+        int recv = socket.EndReceive(result);
 
-            string msgReceived = Encoding.ASCII.GetString(buffer, 0, get);
-            byte[] msg = Encoding.ASCII.GetBytes($"[UDP] {remoteEndPoint}: {msgReceived}");
+        aPos = new float[recv / 4];
 
-            foreach (string socketTag in socketDict.Keys)
-            {
-                if (socketDict[socketTag].ProtocolType == ProtocolType.Udp)
-                {
-                    socketDict[socketTag].SendTo(msg, socketDict[socketTag].RemoteEndPoint);
-                }
-            }
-        }
+        Buffer.BlockCopy(buffer, 0, aPos, 0, recv);
+
+        //cubePos.x = aPos[0];
+        //cubePos.y = aPos[1];
+        //cubePos.z = aPos[2];
+
+        //Console.WriteLine("Received Position from Client: X:" + aPos[0] + " Y:" + aPos[1] + " Z:" + aPos[2]);
+
+        //socket.BeginReceiveFrom(buffer, 0, buffer.Length, 0, new AsyncCallback(ServerReceive), socket);
+    }
+
+    public static int Main(String[] args)
+    {
+        StartServer();
+        Console.ReadKey();
+        return 0;
     }
 }
