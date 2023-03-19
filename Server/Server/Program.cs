@@ -111,7 +111,7 @@ public class ServerConsole
 
     static void StartServer()
     {
-        IPAddress serverIP = IPAddress.Parse("192.168.2.43");
+        IPAddress serverIP = IPAddress.Parse("127.0.0.1");
         IPEndPoint serverTCPECK = new IPEndPoint(serverIP, 8888);
         IPEndPoint serverUDPECK = new IPEndPoint(serverIP, 8889);
 
