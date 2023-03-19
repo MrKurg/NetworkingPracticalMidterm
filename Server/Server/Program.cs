@@ -1,131 +1,82 @@
-﻿// TCP Server (Blocking Mode)
-
-using System;
-using System.Text;
+﻿using System;
 using System.Net;
 using System.Net.Sockets;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
-using System.Numerics;
+using System.Text;
 
 public class TCPServer
 {
     private static byte[] buffer = new byte[512];
-    private static byte[] sendBuffer = new byte[512];
-
     private static Socket serverTCP, serverUDP;
     private static Socket clientTCP, clientUDP;
-
     private static string sendMsg = "";
     private static float[] aPos;
 
-
-    //Vector3 cubePos = new Vector3();
-
     public static void StartServer()
     {
-
-        //Setup our server
+        // Setup our server
         Console.WriteLine("Starting Server...");
 
-        //serverTCP = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+        serverTCP = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
         serverUDP = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
 
+        // Bind the sockets to the desired IP and port
+        serverTCP.Bind(new IPEndPoint(IPAddress.Parse("127.0.0.1"), 8888));
+        serverUDP.Bind(new IPEndPoint(IPAddress.Parse("127.0.0.1"), 8889));
+
+        // Listen for incoming connections
+        serverTCP.Listen(10);
+
+        Console.WriteLine("Waiting for connections...");
+
+        // Accept a TCP connection
+        clientTCP = serverTCP.Accept();
+
+        Console.WriteLine("TCP client connected!");
+
+        // Receive data from UDP client
         EndPoint remoteClient = new IPEndPoint(IPAddress.Any, 0);
+        int recv = serverUDP.ReceiveFrom(buffer, ref remoteClient);
 
-        //serverTCP.Listen(10);
-
-
-        try
-        {
-            //serverTCP.Bind(new IPEndPoint(IPAddress.Parse("127.0.0.1"), 8888));
-            serverUDP.Bind(new IPEndPoint(IPAddress.Parse("127.0.0.1"), 8889));
-
-            // Accept connections
-            Console.WriteLine("Waiting for connections...");
-            //clientTCP = serverTCP.Accept();
-            //clientUDP = serverUDP.Accept();
-
-            Console.WriteLine("Client connected!");
-
-            //IPEndPoint clientTcpEP = (IPEndPoint)clientTCP.RemoteEndPoint;
-            //IPEndPoint clientUdpEP = (IPEndPoint)clientUDP.RemoteEndPoint;
-
-            //Console.WriteLine("Client: {0}  Port: {1}", clientTcpEP.Address, clientTcpEP.Port);
-            //Console.WriteLine("Client: {0}  Port: {1}", clientUdpEP.Address, clientUdpEP.Port);
-
-            //byte[] msg = Encoding.ASCII.GetBytes("This is my first TCP server!!! Welcome to INFR3830");
-
-            // Sending data to connected client
-            //clientTCP.Send(msg);
-
-            // Loop
-            while (true)
-            {
-                int recv = serverUDP.ReceiveFrom(buffer, ref remoteClient);
-                aPos = new float[recv / 4];
-
-                Buffer.BlockCopy(buffer, 0, aPos, 0, recv);
-                Console.WriteLine("Received from " + remoteClient + " X:" + aPos[0] + " Y:" + aPos[1] + " Z:" + aPos[2]);
-
-                serverUDP.SendTo(buffer, remoteClient);
-
-                // User types a msg. Get input as a string
-                Console.Write("\nEnter message: ");
-                string userInput = Console.ReadLine();
-
-                // Convert to bytes
-                byte[] message = Encoding.ASCII.GetBytes(userInput);
-
-                // Send to client
-                clientTCP.Send(message);
-
-                // Print msg from client
-                byte[] clientMsgBuffer = new byte[512];
-                int receiveClientMessage = clientTCP.Receive(clientMsgBuffer);
-                int receiveClientMessageUdo = clientUDP.Receive(clientMsgBuffer);
-                Console.WriteLine("Client message: {0}", Encoding.ASCII.GetString(clientMsgBuffer, 0, receiveClientMessage));
-
-                // End loop
-                break;
-            }
-
-            clientTCP.Shutdown(SocketShutdown.Both);
-            clientUDP.Shutdown(SocketShutdown.Both);
-            clientTCP.Close();
-            clientUDP.Close();
-        }
-        catch (Exception e)
-        {
-            Console.WriteLine(e.ToString());
-        }
-    }
-
-    static void ServerReceive(IAsyncResult result)
-    {
-        Socket socket = (Socket)result.AsyncState;
-
-        int recv = socket.EndReceive(result);
-
+        // Extract position data from the received buffer
         aPos = new float[recv / 4];
-
         Buffer.BlockCopy(buffer, 0, aPos, 0, recv);
 
-        //cubePos.x = aPos[0];
-        //cubePos.y = aPos[1];
-        //cubePos.z = aPos[2];
+        Console.WriteLine("Received from " + remoteClient + " X:" + aPos[0] + " Y:" + aPos[1] + " Z:" + aPos[2]);
 
-        //Console.WriteLine("Received Position from Client: X:" + aPos[0] + " Y:" + aPos[1] + " Z:" + aPos[2]);
+        // Send response to the UDP client
+        serverUDP.SendTo(buffer, remoteClient);
 
-        //socket.BeginReceiveFrom(buffer, 0, buffer.Length, 0, new AsyncCallback(ServerReceive), socket);
+        // Loop to receive and send messages to the TCP client
+        while (true)
+        {
+            // Receive data from the TCP client
+            byte[] clientMsgBuffer = new byte[512];
+            int receiveClientMessage = clientTCP.Receive(clientMsgBuffer);
+
+            Console.WriteLine("Client message: {0}", Encoding.ASCII.GetString(clientMsgBuffer, 0, receiveClientMessage));
+
+            // Get input from the console as a string
+            Console.Write("\nEnter message: ");
+            string userInput = Console.ReadLine();
+
+            // Convert the input string to bytes and send to the TCP client
+            byte[] message = Encoding.ASCII.GetBytes(userInput);
+            clientTCP.Send(message);
+
+            // End loop
+            break;
+        }
+
+        // Close the sockets and clean up
+        clientTCP.Shutdown(SocketShutdown.Both);
+        clientTCP.Close();
+        serverTCP.Close();
+        serverUDP.Close();
     }
 
-    public static int Main(String[] args)
+    public static void Main(string[] args)
     {
         StartServer();
         Console.ReadKey();
-        return 0;
     }
 }
