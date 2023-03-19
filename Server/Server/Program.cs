@@ -23,7 +23,7 @@ public class TCPServer
 
 
 
-    Vector3 cubePos = new Vector3();
+    //Vector3 cubePos = new Vector3();
 
     public static void StartServer()
     {
