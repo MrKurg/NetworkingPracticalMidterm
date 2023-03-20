@@ -126,7 +126,7 @@ public class ServerConsole
 
             serverUDP.BeginReceive(ServerUDPReceiveCallBack, null);
 
-            Task.Run(() => { TCPAccept(); }, mainclient.Token);
+            Task.Run(() => { TCPconnect(); }, mainclient.Token);
         }
         catch (Exception X)
         {
@@ -138,9 +138,9 @@ public class ServerConsole
     /// <summary>
     /// TCP Accept thread, recurrsive, keep accepting
     /// </summary>
-    static void TCPAccept()
+    static void TCPconnect()
     {
-        Console.WriteLine("TCP - Accepting");
+        Console.WriteLine("TCP Connecting");
         try
         {
             Socket acceptedClientSocket = serverTCP.Accept();
@@ -152,7 +152,7 @@ public class ServerConsole
 
         }
 
-        TCPAccept();
+        TCPconnect();
     }
 
     /// <summary>
