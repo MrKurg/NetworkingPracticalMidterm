@@ -12,36 +12,36 @@ using System.Linq;
 public struct Player
 {
     public CancellationTokenSource playerclient;
-    public short playerID { get; set; }
-    public string playerName { get; set; }
-    public Socket playerTCPSocket { get; set; }
-    public IPEndPoint playerEndPoint { get; set; }
-    public float[] playerPosition { get; set; }
+    public short usernameID { get; set; }
+    public string NickName { get; set; }
+    public Socket userTCPSocket { get; set; }
+    public IPEndPoint userEndPoint { get; set; }
+    public float[] userPosition { get; set; }
 
     public Player(Socket userSocket, short userID, string userName)
     {
         //object can be used to cancel asynchronous operations related to the player
         playerclient = new CancellationTokenSource();
         //a short integer value represents the unique identifier of the player
-        playerID = userID;
+        usernameID = userID;
         //TCP socket associated with the player
-        playerTCPSocket = userSocket;
+        userTCPSocket = userSocket;
         //a string value that represents player name
-        playerName = userName;
+        NickName = userName;
         //float array of length 3 for the position
-        playerPosition = new float[3];
+        userPosition = new float[3];
         //the remote endpoint of the connected socket
-        playerEndPoint = (IPEndPoint)userSocket.RemoteEndPoint;
+        userEndPoint = (IPEndPoint)userSocket.RemoteEndPoint;
     }
 
     public Player(Socket mySocket, IPEndPoint myProtocol, short myID, string myName)
     {
         playerclient = new CancellationTokenSource();
-        playerEndPoint = myProtocol;
-        playerID = myID;
-        playerTCPSocket = mySocket;
-        playerName = myName;
-        playerPosition = new float[3];
+        userEndPoint = myProtocol;
+        usernameID = myID;
+        userTCPSocket = mySocket;
+        NickName = myName;
+        userPosition = new float[3];
     }
 
 }
@@ -76,15 +76,15 @@ public class ServerConsole
             {
                 if (playerDList.Count > 0)
                 {
-                    Console.WriteLine("connected");
-                    foreach (Player player in playerDList.Values)
+                    Console.WriteLine("Connected!!!!");
+                    foreach (Player players in playerDList.Values)
                     {
 
-                        Console.WriteLine("ID: {0}, Name: {1}", player.playerID, player.playerName);
-                        Console.WriteLine("POS: {0}, {1}, {2}", player.playerPosition[0], player.playerPosition[1], player.playerPosition[2]);
+                        Console.WriteLine("ID: {0}, Name: {1}", players.usernameID, players.NickName);
+                        Console.WriteLine("POS: {0}, {1}, {2}", players.userPosition[0], players.userPosition[1], players.userPosition[2]);
 
                     }
-                    Console.WriteLine("==========");
+                    Console.WriteLine("............");
                 }
                 KEtimer -= EKinterval;
             }
@@ -186,9 +186,9 @@ public class ServerConsole
 
                     foreach (Player player in playerDList.Values)
                     {
-                        if (player.playerID != printid)
+                        if (player.usernameID != printid)
                         {
-                            playerList += "#" + player.playerID.ToString() + player.playerName;
+                            playerList += "#" + player.usernameID.ToString() + player.NickName;
                         }
 
                     }
@@ -199,10 +199,10 @@ public class ServerConsole
 
                     foreach (Player player in playerDList.Values)
                     {
-                        if (player.playerID != printid)
+                        if (player.usernameID != printid)
                         {
 
-                            player.playerTCPSocket.Send(AddHeader(AddHeader(Encoding.ASCII.GetBytes(myname), printid), 9));
+                            player.userTCPSocket.Send(AddHeader(AddHeader(Encoding.ASCII.GetBytes(myname), printid), 9));
                         }
                     }
                     //begin listening for TCP data from the new player. If an exception is thrown, the method logs the error and throws it again.
@@ -229,7 +229,7 @@ public class ServerConsole
             {
 
                 byte[] krecvBuffer = new byte[1024];
-                int recv = playerDList[LMID].playerTCPSocket.Receive(krecvBuffer);
+                int recv = playerDList[LMID].userTCPSocket.Receive(krecvBuffer);
 
                 short[] pheaderBuffer = new short[2];
                 Buffer.BlockCopy(krecvBuffer, 0, pheaderBuffer, 0, 4);
@@ -244,7 +244,7 @@ public class ServerConsole
                         //string msgPlayerName = "["+playerDList[pID].playerName.ToString();
                         //string msgTime = "] <"+DateTime.Now.ToString("MM/dd hh:mm:ss tt")+"> ";
 
-                        string chatting = $"[<{DateTime.Now.ToString("MM/dd hh:mm:ss tt")}> {playerDList[LMID].playerName}]: {content}";
+                        string chatting = $"[<{DateTime.Now.ToString("MM/dd hh:mm:ss tt")}> {playerDList[LMID].NickName}]: {content}";
 
                         Console.WriteLine(chatting);
 
@@ -256,7 +256,7 @@ public class ServerConsole
 
                         foreach (Player player in playerDList.Values)
                         {
-                            player.playerTCPSocket.Send(message);
+                            player.userTCPSocket.Send(message);
                         }
 
                         break;
@@ -294,11 +294,11 @@ public class ServerConsole
 
                 if (playerDList.ContainsKey(kid))
                 {
-                    Player setupPlayer = new Player(playerDList[kid].playerTCPSocket, clientprotocol, playerDList[kid].playerID, playerDList[kid].playerName);
+                    Player setupPlayer = new Player(playerDList[kid].userTCPSocket, clientprotocol, playerDList[kid].usernameID, playerDList[kid].NickName);
 
                     playerDList[kid] = setupPlayer;
 
-                    Console.WriteLine("SETUP!: " + playerDList[kid].playerEndPoint.Address + " " + playerDList[kid].playerEndPoint.Port);
+                    Console.WriteLine("SETUP!: " + playerDList[kid].userEndPoint.Address + " " + playerDList[kid].userEndPoint.Port);
 
                 }
                 break;
@@ -307,7 +307,7 @@ public class ServerConsole
                 short myplayerid = GetHeader(recvBuffer, 2);
                 if (playerDList.ContainsKey(myplayerid))
                 {
-                    Buffer.BlockCopy(GetContent(recvBuffer, 4), 0, playerDList[myplayerid].playerPosition, 0, 12);
+                    Buffer.BlockCopy(GetContent(recvBuffer, 4), 0, playerDList[myplayerid].userPosition, 0, 12);
 
                     //Console.WriteLine("GET Position: {0}: {1}, {2}, {3}", playerid,
                     //    playerDList[playerid].playerPosition[0],
@@ -316,15 +316,15 @@ public class ServerConsole
 
                     foreach (Player twoplayer in playerDList.Values)
                     {
-                        if (twoplayer.playerID != myplayerid)
+                        if (twoplayer.usernameID != myplayerid)
                         {
-                            if (twoplayer.playerEndPoint != null)
+                            if (twoplayer.userEndPoint != null)
                             {
-                                serverUDP.Send(recvBuffer, recvBuffer.Length, twoplayer.playerEndPoint);
+                                serverUDP.Send(recvBuffer, recvBuffer.Length, twoplayer.userEndPoint);
                             }
                             else
                             {
-                                Console.WriteLine(twoplayer.playerName + "'s endpoint is null");
+                                Console.WriteLine(twoplayer.NickName + "'s endpoint is null");
                             }
 
                         }
