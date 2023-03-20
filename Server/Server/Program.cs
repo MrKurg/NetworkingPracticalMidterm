@@ -103,7 +103,7 @@ public class ServerConsole
 
         Task.Run(() => { PrintPlayerList(); }, mainclient.Token);
 
-        Console.WriteLine("Press Ctrl+C or close the console window to quit.");
+        Console.WriteLine("Press 1 or close concole");
         Console.ReadLine();
 
         return 0;
