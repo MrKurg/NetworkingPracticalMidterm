@@ -23,23 +23,21 @@ public class Client : MonoBehaviour
     //public TMP_InputField packetInput;
     private float timer;
 
-    private static Socket clientTCP = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-    private static Socket clientUDP = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
-    private static byte[] buffer = new byte[512];
-
-    //LECTURE 06
-    private static byte[] bpos;
-    private static float[] pos;
-
     public static void StartClient()
     {
-        remoteEP = new IPEndPoint(IPAddress.Any, 8889);
+        try
+        {
+            IPAddress ip = IPAddress.Parse("127.0.0.1");
+            remoteEP = new IPEndPoint(ip, 8889);
 
-        //clientTCP.Connect(IPAddress.Parse("127.0.0.1"), 8888);
-        clientUDP.Connect(IPAddress.Parse("127.0.0.1"), 8889);
-        Debug.Log("Connected to server!");
+            clientSocket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
 
 
+        }
+        catch (Exception E)
+        {
+            Debug.Log(E.ToString());
+        }
     }
 
     private void SendPosition()
